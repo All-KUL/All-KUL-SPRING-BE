@@ -11,6 +11,7 @@ public interface LectureRepository extends MongoRepository<LectureModel, String>
     List<LectureModel> findAll();
     LectureModel findFirstById(String id);
     boolean existsById(String id);
+    boolean existsByName(String name);
 
     // DELETE
     void deleteById(String id);
