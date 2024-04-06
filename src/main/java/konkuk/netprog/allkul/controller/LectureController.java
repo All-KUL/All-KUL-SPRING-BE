@@ -17,9 +17,8 @@ public class LectureController {
     LectureService lectureService;
 
     @PostMapping(value = "/create")
-    public CommonResponse createLecture(@RequestParam String name, @RequestParam String info, @RequestParam int maxStudents){
+    public CommonResponse createLecture(@RequestParam String id, @RequestParam String name, @RequestParam String info, @RequestParam int maxStudents){
         log.info("[LectureController]-[saveLecture] Call LectureService saveLecture method");
-        LectureModel lectureModel = new LectureModel("", name, info, maxStudents, new Date());
-        return lectureService.createLecture(lectureModel);
+        return lectureService.createLecture(new LectureModel(id, name, info, maxStudents, new Date()));
     }
 }
