@@ -8,8 +8,8 @@ import java.util.List;
 
 @Component
 public interface LectureService {
-    CommonResponse createLecture(LectureModel lecture);
-    List<LectureModel> getAllLecture();
-    LectureModel getLectureById(String id);
-    boolean deleteLectureByID(String id);
+    CommonResponse addLecture(LectureModel lecture);
+    CommonResponse getAllLecture();
+    CommonResponse getLectureById(String id);
+    CommonResponse deleteLectureByID(String id);
 }

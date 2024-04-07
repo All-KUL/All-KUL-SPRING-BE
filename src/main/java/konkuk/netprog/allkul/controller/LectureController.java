@@ -16,9 +16,27 @@ public class LectureController {
     @Autowired
     LectureService lectureService;
 
-    @PostMapping(value = "/create")
-    public CommonResponse createLecture(@RequestParam String id, @RequestParam String name, @RequestParam String info, @RequestParam int maxStudents){
+    @PostMapping(value = "/addLecture")
+    public CommonResponse addLecture(@RequestParam String id, @RequestParam String name, @RequestParam String info, @RequestParam int maxStudents){
         log.info("[LectureController]-[saveLecture] Call LectureService saveLecture method");
-        return lectureService.createLecture(new LectureModel(id, name, info, maxStudents, new Date()));
+        return lectureService.addLecture(new LectureModel(id, name, info, maxStudents, new Date()));
+    }
+
+    @GetMapping(value = "/getAllLecture")
+    public CommonResponse getAllLecture(){
+        log.info("[LectureController]-[saveLecture] Call LectureService getAllLecture method");
+        return lectureService.getAllLecture();
+    }
+
+    @GetMapping(value = "/getLecture")
+    public CommonResponse getAllLecture(@RequestParam String id){
+        log.info("[LectureController]-[saveLecture] Call LectureService getLectureById method");
+        return lectureService.getLectureById(id);
+    }
+
+    @DeleteMapping(value = "/deleteLecture")
+    public CommonResponse deleteLecture(@RequestParam String id){
+        log.info("[LectureController]-[saveLecture] Call LectureService deleteLectureByID method");
+        return lectureService.deleteLectureByID(id);
     }
 }

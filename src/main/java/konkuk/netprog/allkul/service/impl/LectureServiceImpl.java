@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 
+import java.util.LinkedList;
 import java.util.List;
 
 @Slf4j
@@ -23,7 +24,7 @@ public class LectureServiceImpl implements LectureService {
 
     // LectureModel 정보를 통해 Lecture을 생성하는 로직
     @Override
-    public CommonResponse createLecture(LectureModel lecture) {
+    public CommonResponse addLecture(LectureModel lecture) {
 
         String newID = lecture.getId();
         // 만약 ID가 겹친다면 겹치지 않을때까지 새로운 4자리 랜덤 ID 생성
@@ -43,19 +44,37 @@ public class LectureServiceImpl implements LectureService {
         return new CommonResponse(true, HttpStatus.CONFLICT, "Lecture Name Already Exists");
     }
 
-    // TODO : Create Below Fucntions
+    // 모든 강의를 Repository로부터 가져오기
     @Override
-    public List<LectureModel> getAllLecture() {
-        return null;
+    public CommonResponse getAllLecture() {
+        List<LectureModel> allLecture = lectureRepository.findAll();
+        return new CommonResponse(true, HttpStatus.OK, "All Lectures", allLecture);
     }
 
     @Override
-    public LectureModel getLectureById(String id) {
-        return null;
+    public CommonResponse getLectureById(String id) {
+        LectureModel lecture = lectureRepository.findFirstById(id);
+
+        if(lecture != null) {
+            // CommonResponse에 맞추기 위해 새로운 response List<LectureModel> 생성
+            List<LectureModel> response = new LinkedList<>();
+            response.add(lecture);
+
+            return new CommonResponse(true, HttpStatus.OK, "Get Lecture by ID", response);
+        }else {
+            return new CommonResponse(false, HttpStatus.NO_CONTENT, "Invalid LectureID");
+        }
     }
 
     @Override
-    public boolean deleteLectureByID(String id) {
-        return false;
+    public CommonResponse deleteLectureByID(String id) {
+        LectureModel lecture = lectureRepository.findFirstById(id);
+
+        if(lecture != null) {
+            lectureRepository.delete(lecture);
+            return new CommonResponse(true, HttpStatus.OK, "Lecture [" + id + "] Deleted");
+        }else {
+            return new CommonResponse(false, HttpStatus.NO_CONTENT, "Invalid LectureID");
+        }
     }
 }
