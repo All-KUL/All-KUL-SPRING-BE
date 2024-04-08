@@ -34,6 +34,9 @@ dependencies {
 	annotationProcessor 'org.projectlombok:lombok'
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testImplementation 'org.springframework.security:spring-security-test'
+
+	// Socket
+	implementation 'com.corundumstudio.socketio:netty-socketio:2.0.3'
 }
 
 tasks.named('test') {
