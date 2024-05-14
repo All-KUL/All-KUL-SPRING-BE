@@ -1,26 +1,26 @@
 package konkuk.netprog.allkul.socket;
 
+import konkuk.netprog.allkul.data.repository.LectureRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.java_websocket.WebSocket;
 import org.java_websocket.handshake.ClientHandshake;
 import org.java_websocket.server.WebSocketServer;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.net.InetSocketAddress;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Random;
 
 @Slf4j
 @Component
 public class EnrollmentWebSocket extends WebSocketServer {
     private final SessionManager sessionManager;
 
-    public EnrollmentWebSocket() {
+    @Autowired
+    public EnrollmentWebSocket(LectureRepository lectureRepository) {
         // WebSocketServer 부모 Class에게 Local InetSocketAddress 전송
         super(new InetSocketAddress(8081));
         // 각 세션들을 관리해줄 final SessionManager 선언
-        this.sessionManager = new SessionManager();
+        this.sessionManager = new SessionManager(lectureRepository);
 
         // WebSocketServer start()
         super.start();
@@ -46,8 +46,29 @@ public class EnrollmentWebSocket extends WebSocketServer {
 
     @Override
     // Client로부터 메세지를 받았을 때 여러 동작을 정의
+    // "[명령어]데이터"와 같은 형식으로 메세지 구성
     public void onMessage(WebSocket conn, String message) {
-        sessionManager.broadcastMessage(conn, message);
+        String[] parts = message.split("]", 2);
+        if (parts.length == 2) {
+            // 명령어의 [ 부분을 제거
+            String command = parts[0].substring(1);
+            String content = parts[1];
+            content = content.trim();
+
+            if (command.equals("initEnrollment")) {
+                sessionManager.initEnrollment(conn);
+            } else if(command.equals("setEnrollTime")) {
+                sessionManager.setEnrollTime(conn, content);
+            } else if(command.equals("addLecture")) {
+                sessionManager.addLecture(conn, content);
+            } else if(command.equals("deleteLecture")) {
+                sessionManager.deleteLecture(conn, content);
+            } else if(command.equals("enroll")) {
+                sessionManager.enroll(conn, content);
+            }
+        } else {
+           conn.send("명령어 형식이 올바르지 않습니다.");
+        }
     }
 
     @Override

@@ -1,54 +1,110 @@
 package konkuk.netprog.allkul.socket;
 
+import konkuk.netprog.allkul.common.random.RandomIdGenerator;
+import konkuk.netprog.allkul.data.repository.LectureRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.java_websocket.WebSocket;
 import org.java_websocket.handshake.ClientHandshake;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Random;
+import java.util.*;
 
 @Slf4j
 @Component
 public class SessionManager {
-    private final Map<String, Map<WebSocket, Boolean>> sessionMap;
-    private final Random random;
 
-    public SessionManager(){
+    private final LectureRepository lectureRepository;
+    private final RandomIdGenerator randomIdGenerator;
+    private final Map<String, Map<WebSocket, String>> sessionMap;
+    private final Map<String, EnrollmentManager> enrollManagerMap;
+
+    public SessionManager(LectureRepository lectureRepository){
+        this.lectureRepository = lectureRepository;
+        this.randomIdGenerator = new RandomIdGenerator();
         this.sessionMap = new HashMap<>();
-        this.random = new Random();
+        this.enrollManagerMap = new HashMap<>();
     }
 
     public void joinClient(WebSocket conn, ClientHandshake handshake){
         // WebSocket Connection으로부터 SessionID Header 받아오기
         String sessionId = handshake.getFieldValue("SessionID");
+
+        // ClientName을 Header로 받아오기
+        String clientName = handshake.getFieldValue("ClientName");
+        if(clientName == null)
+            clientName = "User" + randomIdGenerator.generateRandomFourDigitString();
+
+
         // 만약 현재 sessionMap에 sessionId가 존재하지 않는다면
         if (sessionId == null || !sessionMap.containsKey(sessionId)) {
             // 새로운 SessionID 생성
-            sessionId = generateSessionId();
+            sessionId = randomIdGenerator.generateSessionId();
             // SessionMap에 새로운 Session 생성
             sessionMap.put(sessionId, new HashMap<>());
             // 새로 생성된 Session에 WebSocket의 현재 Connection 추가
-            sessionMap.get(sessionId).put(conn, true);
+            sessionMap.get(sessionId).put(conn, clientName);
+
+            // 해당 세션에 대한 새로운 enrollmentMap 생성
+            enrollManagerMap.put(sessionId, new EnrollmentManager(lectureRepository));
+
             // Client에게 새로 생성된 SessionID 전송
             conn.send(sessionId);
-            log.info("[SessionManager]-[joinClient] New Session [{}] Created", sessionId);
+            log.info("[SessionManager]-[joinClient] [{}] Created New Session [{}]", clientName, sessionId);
         }else {
             // 기존 Session에 WebSocket의 현재 Connection 추가
-            sessionMap.get(sessionId).put(conn, true);
-            conn.send("Successfully Joined Session [" + sessionId + "]");
-            log.info("[SessionManager]-[joinClient] New Client Joined Session [{}]", sessionId);
+            sessionMap.get(sessionId).put(conn, clientName);
+            broadcastMessage(conn,"["+ clientName + "] Joined Session [" + sessionId + "]");
+            log.info("[SessionManager]-[joinClient] Client [{}] Joined Session [{}]", clientName, sessionId);
         }
+    }
+
+    public void initEnrollment(WebSocket conn){
+        String sessionId = getSessionId(conn);
+        if (sessionId != null)
+            enrollManagerMap.get(sessionId).initEnrollment();
+    }
+
+    public void setEnrollTime(WebSocket conn, String dateString){
+        String sessionId = getSessionId(conn);
+        if (sessionId != null) {
+            String[] parts = dateString.split("[.-:]");
+            int year = Integer.parseInt(parts[0]);
+            // 월은 0부터 시작하므로 1을 빼줌
+            int month = Integer.parseInt(parts[1]) - 1;
+            int day = Integer.parseInt(parts[2]);
+            int hour = Integer.parseInt(parts[3]);
+            int minute = Integer.parseInt(parts[4]);
+
+            Date newDate = new Date(year - 1900, month, day, hour, minute);
+            enrollManagerMap.get(sessionId).setEnrollmentTime(newDate);
+            broadcastMessage(conn, "수강신청 시간을 <" + newDate + "> 으로 변경하였습니다.");
+        }
+    }
+
+    public void addLecture(WebSocket conn, String lectureID){
+        String sessionId = getSessionId(conn);
+        if (sessionId != null)
+            broadcastMessage(conn, enrollManagerMap.get(sessionId).addLecture(lectureID));
+    }
+
+    public void deleteLecture(WebSocket conn, String lectureID){
+        String sessionId = getSessionId(conn);
+        if (sessionId != null)
+            broadcastMessage(conn, enrollManagerMap.get(sessionId).deleteLecture(lectureID));
+    }
+
+    public void enroll(WebSocket conn, String lectureID){
+        String sessionId = getSessionId(conn);
+        if (sessionId != null)
+            broadcastMessage(conn, enrollManagerMap.get(sessionId).enroll(lectureID));
     }
 
     public void broadcastMessage(WebSocket sender, String message) {
         String sessionId = getSessionId(sender);
         if (sessionId != null) {
-            sessionMap.get(sessionId).forEach((conn, isActive) -> {
-                if (conn != sender && isActive) {
-                    conn.send(message);
-                }
+            sessionMap.get(sessionId).forEach((conn, name) -> {
+                conn.send("[" + name +"]" + message);
             });
         }
     }
@@ -57,13 +113,15 @@ public class SessionManager {
         // 현재 Conn이 속해있는 SessionID 추출
         String sessionId = getSessionId(conn);
         if (sessionId != null) {
+            broadcastMessage(conn,"["+ sessionMap.get(sessionId).get(conn) + "] Left Session [" + sessionId + "]");
             // SessionID에 해당하는 Session에서 WebSocket Conn 제거
             sessionMap.get(sessionId).remove(conn);
             log.info("[SessionManager]-[removeFromSession] Client Removed from Session [{}]", sessionId);
             // 만약 현재 세션이 비었을 경우
             if (sessionMap.get(sessionId).isEmpty()) {
-                // 해당 세션 자체를 SessionMap에서 제거
+                // 해당 세션과 Enrollement를 SessionMap에서 제거
                 sessionMap.remove(sessionId);
+                enrollManagerMap.remove(sessionId);
                 log.info("[SessionManager]-[removeFromSession] Session [{}] Removed", sessionId);
             }
         }
@@ -76,16 +134,5 @@ public class SessionManager {
                 .map(Map.Entry::getKey)
                 .findFirst()
                 .orElse(null);
-    }
-
-    // 새로운 SessionID를 생성하는 매소드
-    private String generateSessionId() {
-        String characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-        StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < 10; i++) {
-            int index = random.nextInt(characters.length());
-            sb.append(characters.charAt(index));
-        }
-        return sb.toString();
     }
 }
