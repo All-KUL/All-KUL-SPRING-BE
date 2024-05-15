@@ -65,20 +65,27 @@ public class SessionManager {
             enrollManagerMap.get(sessionId).initEnrollment();
     }
 
+    // YYYY.MM.DD-HH:MM
     public void setEnrollTime(WebSocket conn, String dateString){
         String sessionId = getSessionId(conn);
-        if (sessionId != null) {
-            String[] parts = dateString.split("[.-:]");
-            int year = Integer.parseInt(parts[0]);
-            // 월은 0부터 시작하므로 1을 빼줌
-            int month = Integer.parseInt(parts[1]) - 1;
-            int day = Integer.parseInt(parts[2]);
-            int hour = Integer.parseInt(parts[3]);
-            int minute = Integer.parseInt(parts[4]);
+        try {
+            if (sessionId != null) {
+                // 정규식에서 .을 표현하기 위하여 \\ 처럼 백슬래시 2개를 사용하여 \\.으로 표현
+                String[] parts = dateString.split("[\\.:-]");
+                int year = Integer.parseInt(parts[0]);
+                // 월은 0부터 시작하므로 1을 빼줌
+                int month = Integer.parseInt(parts[1]) - 1;
+                int day = Integer.parseInt(parts[2]);
+                int hour = Integer.parseInt(parts[3]);
+                int minute = Integer.parseInt(parts[4]);
 
-            Date newDate = new Date(year - 1900, month, day, hour, minute);
-            enrollManagerMap.get(sessionId).setEnrollmentTime(newDate);
-            broadcastMessage(conn, "수강신청 시간을 <" + newDate + "> 으로 변경하였습니다.");
+                Date newDate = new Date(year - 1900, month, day, hour, minute);
+                enrollManagerMap.get(sessionId).setEnrollmentTime(newDate);
+                broadcastMessage(conn, "수강신청 시간을 <" + newDate + "> 으로 변경하였습니다.");
+            }
+        } catch(Exception e){
+            e.printStackTrace();
+            conn.send("[setEnrollTime]-[fail] Invalid Date Format!");
         }
     }
 

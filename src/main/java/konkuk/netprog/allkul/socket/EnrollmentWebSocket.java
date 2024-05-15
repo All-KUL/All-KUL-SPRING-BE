@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.net.InetSocketAddress;
+import java.util.Date;
 
 @Slf4j
 @Component
@@ -55,6 +56,7 @@ public class EnrollmentWebSocket extends WebSocketServer {
             String content = parts[1];
             content = content.trim();
 
+            log.info("[EnrollmentWebSocket]-[onMessage] {} : {}", command, content);
             if (command.equals("initEnrollment")) {
                 sessionManager.initEnrollment(conn);
             } else if(command.equals("setEnrollTime")) {
@@ -65,6 +67,8 @@ public class EnrollmentWebSocket extends WebSocketServer {
                 sessionManager.deleteLecture(conn, content);
             } else if(command.equals("enroll")) {
                 sessionManager.enroll(conn, content);
+            } else if(command.equals("serverTime")){
+                conn.send((new Date()).toString());
             }
         } else {
            conn.send("명령어 형식이 올바르지 않습니다.");
@@ -72,9 +76,8 @@ public class EnrollmentWebSocket extends WebSocketServer {
     }
 
     @Override
-    // 만약 새로운 오류가 발생하면 SessionManager로 Client를 Session에서 Remove
+    // 만약 새로운 오류가 발생하면 에러 로그 출력
     public void onError(WebSocket conn, Exception ex) {
-        sessionManager.removeFromSession(conn);
         ex.printStackTrace();
     }
 }

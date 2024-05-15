@@ -2,10 +2,8 @@ package konkuk.netprog.allkul.socket;
 
 import konkuk.netprog.allkul.data.model.LectureModel;
 import konkuk.netprog.allkul.data.repository.LectureRepository;
-import lombok.Builder;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.util.Date;
