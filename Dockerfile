@@ -3,6 +3,8 @@ FROM openjdk:17-jdk-slim
 WORKDIR /app
 COPY build.gradle .
 COPY gradlew .
+COPY gradlew.bat .
+COPY gradle gradle
 COPY src ./src
 RUN ./gradlew build --no-daemon
 
