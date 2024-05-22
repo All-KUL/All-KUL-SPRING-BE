@@ -109,9 +109,10 @@ public class SessionManager {
 
     public void broadcastMessage(WebSocket sender, String message) {
         String sessionId = getSessionId(sender);
+        String senderName = getSenderName(sender);
         if (sessionId != null) {
             sessionMap.get(sessionId).forEach((conn, name) -> {
-                conn.send("[" + name +"]" + message);
+                conn.send("[" + senderName +"] : " + message);
             });
         }
     }
@@ -141,5 +142,10 @@ public class SessionManager {
                 .map(Map.Entry::getKey)
                 .findFirst()
                 .orElse(null);
+    }
+
+    private String getSenderName(WebSocket conn) {
+        String sessionID =  getSessionId(conn);
+        return sessionMap.get(sessionID).get(conn);
     }
 }

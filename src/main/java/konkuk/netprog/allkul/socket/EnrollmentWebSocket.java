@@ -69,6 +69,8 @@ public class EnrollmentWebSocket extends WebSocketServer {
                 sessionManager.enroll(conn, content);
             } else if(command.equals("serverTime")){
                 conn.send((new Date()).toString());
+            } else if(command.equals("chat")){
+                sessionManager.broadcastMessage(conn, content);
             }
         } else {
            conn.send("명령어 형식이 올바르지 않습니다.");
