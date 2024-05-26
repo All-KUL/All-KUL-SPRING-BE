@@ -26,15 +26,9 @@ public class SessionManager {
         this.enrollManagerMap = new HashMap<>();
     }
 
-    public void joinClient(WebSocket conn, ClientHandshake handshake){
-        // WebSocket Connection으로부터 SessionID Header 받아오기
-        String sessionId = handshake.getFieldValue("SessionID");
-
-        // ClientName을 Header로 받아오기
-        String clientName = handshake.getFieldValue("ClientName");
+    public void joinClient(WebSocket conn, String sessionId, String clientName){
         if(clientName == null)
             clientName = "User" + randomIdGenerator.generateRandomFourDigitString();
-
 
         // 만약 현재 sessionMap에 sessionId가 존재하지 않는다면
         if (sessionId == null || !sessionMap.containsKey(sessionId)) {

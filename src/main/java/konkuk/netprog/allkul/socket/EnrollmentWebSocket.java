@@ -36,7 +36,6 @@ public class EnrollmentWebSocket extends WebSocketServer {
     @Override
     // 만약 새로운 Connection이 Open되면 SessionManager로 Client JOIN
     public void onOpen(WebSocket conn, ClientHandshake handshake) {
-        sessionManager.joinClient(conn, handshake);
     }
 
     @Override
@@ -57,7 +56,12 @@ public class EnrollmentWebSocket extends WebSocketServer {
             content = content.trim();
 
             log.info("[EnrollmentWebSocket]-[onMessage] {} : {}", command, content);
-            if (command.equals("initEnrollment")) {
+            if(command.equals("joinClient")) {
+                String[] tmp = content.split(",");
+                String sessionId = tmp[0];
+                String clientName = tmp[1];
+                sessionManager.joinClient(conn, sessionId, clientName);
+            } else if (command.equals("initEnrollment")) {
                 sessionManager.initEnrollment(conn);
             } else if(command.equals("setEnrollTime")) {
                 sessionManager.setEnrollTime(conn, content);
