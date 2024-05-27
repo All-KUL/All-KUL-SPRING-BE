@@ -81,7 +81,7 @@ public class SessionManager {
 
                 Date newDate = new Date(year - 1900, month, day, hour, minute);
                 enrollManagerMap.get(sessionId).setEnrollmentTime(newDate);
-                broadcastMessage(conn, "수강신청 시간을 <" + newDate + "> 으로 변경하였습니다.");
+                broadcastMessage(conn, "[setEnrollTime]-[success] 수강신청 시간을 <" + newDate + "> 으로 변경하였습니다.");
             }
         } catch(Exception e){
             e.printStackTrace();
@@ -103,7 +103,10 @@ public class SessionManager {
 
     public void enroll(WebSocket conn, String lectureID){
         String sessionId = getSessionId(conn);
-        if (sessionId != null)
+        String msg = enrollManagerMap.get(sessionId).enroll(lectureID);
+        if(msg.contains("fail"))
+            conn.send(msg);
+        else if(sessionId != null)
             broadcastMessage(conn, enrollManagerMap.get(sessionId).enroll(lectureID));
     }
 
@@ -112,7 +115,7 @@ public class SessionManager {
         String senderName = getSenderName(sender);
         if (sessionId != null) {
             sessionMap.get(sessionId).forEach((conn, name) -> {
-                conn.send("[" + senderName +"] : " + message);
+                conn.send("[" + senderName +"]-" + message);
             });
         }
     }
