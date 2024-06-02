@@ -61,12 +61,17 @@ public class EnrollmentManager {
     }
 
     public synchronized String enroll(String id) {
-        if (enrollmentTime.before(new Date())) {
-            String lectureName = lectureMap.get(id).getLectureName();
-            if(lectureMap.get(id).enroll())
-                return "[enroll]-[success] <" + lectureName + "> 수강 신청에 성공하였습니다";
-            return "[enroll]-[fail] <" + lectureName + "> 수강 인원이 초과되었습니다!";
+        try{
+            if (enrollmentTime.before(new Date())) {
+                String lectureName = lectureMap.get(id).getLectureName();
+                if(lectureMap.get(id).enroll())
+                    return "[enroll]-[success] <" + lectureName + "> 수강 신청에 성공하였습니다";
+                return "[enroll]-[fail] <" + lectureName + "> 수강 인원이 초과되었습니다!";
+            }
+            return "[enroll]-[fail] 수강신청 기간이 아닙니다!";
+        }catch (Exception e){
+            e.printStackTrace();
+            return "[enroll]-[fail] 수강 신청에 실패하였습니다!";
         }
-        return "[enroll]-[fail] 수강신청 기간이 아닙니다!";
     }
 }
