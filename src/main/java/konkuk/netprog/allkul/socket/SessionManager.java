@@ -43,7 +43,8 @@ public class SessionManager {
             enrollManagerMap.put(sessionId, new EnrollmentManager(lectureRepository));
 
             // Client에게 새로 생성된 SessionID 전송
-            conn.send(sessionId);
+            // conn.send(sessionId);
+            broadcastMessage(conn,"[create]"+ sessionId);
             log.info("[SessionManager]-[joinClient] [{}] Created New Session [{}]", clientName, sessionId);
         }else {
             // 기존 Session에 WebSocket의 현재 Connection 추가
@@ -101,7 +102,8 @@ public class SessionManager {
         if(msg.contains("fail"))
             conn.send(msg);
         else if(sessionId != null)
-            broadcastMessage(conn, enrollManagerMap.get(sessionId).enroll(lectureID));
+            conn.send(msg);
+            //broadcastMessage(conn, enrollManagerMap.get(sessionId).enroll(lectureID));
     }
 
     public void broadcastMessage(WebSocket sender, String message) {
