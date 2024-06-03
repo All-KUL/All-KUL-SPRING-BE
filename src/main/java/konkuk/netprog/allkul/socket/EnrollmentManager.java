@@ -41,7 +41,7 @@ public class EnrollmentManager {
 
             String lectureID = lecture.getId();
             if(lectureMap.containsKey(lectureID))
-                return "[addLecture]-[fail] 해당 세션이 이미 해당 강의가 존재합니다!";
+                return "[addLecture]-[fail] 해당 세션에 이미 해당 강의가 존재합니다!";
 
             lectureMap.put(lectureID, new SessionLecture( lecture.getName(),lecture.getMaxStudents(), 0));
             return "[addLecture]-[success] 성공적으로 강의 <" + lecture.getName() + ">를 세션에 추가하였습니다.";
