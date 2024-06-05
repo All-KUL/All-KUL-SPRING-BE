@@ -88,16 +88,14 @@ public class SessionManager {
         String sessionId = getSessionId(conn);
         String msg = enrollManagerMap.get(sessionId).addLecture(lectureID);
         if (sessionId != null)
-            conn.send(msg);
-            //broadcastMessage(conn, enrollManagerMap.get(sessionId).addLecture(lectureID));
+            broadcastMessage(conn, msg);
     }
 
     public void deleteLecture(WebSocket conn, String lectureID){
         String sessionId = getSessionId(conn);
         String msg = enrollManagerMap.get(sessionId).deleteLecture(lectureID);
         if (sessionId != null)
-            conn.send(msg);
-            //broadcastMessage(conn, enrollManagerMap.get(sessionId).deleteLecture(lectureID));
+            broadcastMessage(conn, msg);
     }
 
     public void enroll(WebSocket conn, String lectureID){
@@ -107,7 +105,14 @@ public class SessionManager {
             conn.send(msg);
         else if(sessionId != null)
             conn.send(msg);
-            //broadcastMessage(conn, enrollManagerMap.get(sessionId).enroll(lectureID));
+        else
+            broadcastMessage(conn, msg);
+    }
+
+    public void botEnroll(WebSocket conn, String lectureID){
+        String sessionId = getSessionId(conn);
+        String msg = enrollManagerMap.get(sessionId).enroll(lectureID);
+        log.info("[SessionManager]-[botEnroll]-" + msg);
     }
 
     public void broadcastMessage(WebSocket sender, String message) {

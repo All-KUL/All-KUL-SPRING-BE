@@ -71,6 +71,8 @@ public class EnrollmentWebSocket extends WebSocketServer {
                 sessionManager.deleteLecture(conn, content);
             } else if(command.equals("enroll")) {
                 sessionManager.enroll(conn, content);
+            } else if(command.equals("botEnroll")) {
+                sessionManager.botEnroll(conn, content);
             } else if(command.equals("serverTime")){
                 conn.send((new Date()).toString());
             } else if(command.equals("chat")){
